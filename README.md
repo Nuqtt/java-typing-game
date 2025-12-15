@@ -7,8 +7,8 @@
 
 > 一款節奏明快、寓教於樂的無限跑酷遊戲。結合打字速度與生存挑戰，靈感來自 Chrome 離線恐龍遊戲，但奔跑的動力源自你的英文單字量！
 
-![Game Screenshot](docs/screenshot.png)
-*(請將此處替換為實際的遊戲截圖)*
+<img width="1197" height="490" alt="image" src="https://github.com/user-attachments/assets/afc03538-cad3-4eca-ac98-6e5a4b0c2390" />
+
 
 ## ✨ 專案特色 (Features)
 
