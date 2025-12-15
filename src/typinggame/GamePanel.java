@@ -18,8 +18,20 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private final Timer timer;
 
     public GamePanel(String playerName) {
-        LeaderboardStorage storage = new MemoryLeaderboard();
-        storage = new MongoLeaderboard("mongodb://localhost:27017", "TypingGameDB", "scores");
+        LeaderboardStorage storage;
+
+        try {
+            // ===  MongoDB ===
+            // 嘗試連接到本機 MongoDB，資料庫名 TypingGameDB，集合名 scores
+            storage = new MongoLeaderboard("mongodb://localhost:27017", "TypingGameDB", "scores");
+            System.out.println("✅ Connected to MongoDB!");
+        } catch (Exception e) {
+            // 如果連線失敗 (例如沒開資料庫)，自動降級回記憶體版，避免遊戲崩潰
+            System.err.println("⚠️ MongoDB connection failed: " + e.getMessage());
+            System.err.println("➡️ Falling back to Memory Leaderboard.");
+            storage = new MemoryLeaderboard();
+        }
+
         this.engine = new GameEngine(playerName, storage);
         this.timer = new Timer(GameConfig.TIMER_DELAY_MS, this);
 

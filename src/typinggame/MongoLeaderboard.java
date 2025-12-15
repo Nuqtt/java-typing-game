@@ -8,8 +8,9 @@ import java.util.List;
 public class MongoLeaderboard implements LeaderboardStorage {
     private final MongoCollection<Document> collection;
 
+    // 建構子：建立連線
     public MongoLeaderboard(String connectionString, String dbName, String colName) {
-        // 建立連線 (建議使用 try-with-resources 管理 client，但在這個簡單範例中我們先保持連線)
+        // 連接本地 MongoDB (預設 port 27017)
         MongoClient client = MongoClients.create(connectionString);
         MongoDatabase db = client.getDatabase(dbName);
         this.collection = db.getCollection(colName);
@@ -26,15 +27,16 @@ public class MongoLeaderboard implements LeaderboardStorage {
     @Override
     public List<ScoreEntry> getTopScores(int limit) {
         List<ScoreEntry> list = new ArrayList<>();
-        // 查詢：依照 score 遞減排序 (descending)，取前 limit 筆
+        // 依照分數(score) 降序(-1) 排列
         FindIterable<Document> docs = collection.find()
                 .sort(new Document("score", -1))
                 .limit(limit);
 
         for (Document d : docs) {
             String name = d.getString("name");
-            // MongoDB 數字可能會存成 Integer 或 Long，安全轉型
-            long score = d.get("score") instanceof Number ? ((Number) d.get("score")).longValue() : 0;
+            // 處理數字型別轉換 (MongoDB 預設可能是 Integer 或 Long)
+            Number num = (Number) d.get("score");
+            long score = (num != null) ? num.longValue() : 0;
             list.add(new ScoreEntry(name, score));
         }
         return list;
