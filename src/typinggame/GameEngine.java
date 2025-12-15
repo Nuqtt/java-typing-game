@@ -42,7 +42,14 @@ public class GameEngine {
     private double speed;
     private long lastDifficultyIncreaseAt;
 
-    public GameEngine() {
+    private String playerName;
+    private final LeaderboardStorage leaderboard;
+    private List<ScoreEntry> topScores; // 暫存排行榜給 UI 顯示用
+
+    public GameEngine(String playerName, LeaderboardStorage leaderboard) {
+        this.playerName = playerName;
+        this.leaderboard = leaderboard;
+
         this.player = new Player(80, GameConfig.GROUND_Y);
         this.wordGenerator = new WordGenerator();
         // 初始化背景
@@ -224,10 +231,28 @@ public class GameEngine {
             gameOver = true;
             running = false;
             endedAt = System.currentTimeMillis();
+
+            // 儲存分數並撈取排行榜
+            long score = getElapsedMillis() / 1000;
+            ScoreEntry entry = new ScoreEntry(playerName, score);
+            
+            // 存入 DB
+            leaderboard.saveScore(entry);
+            
+            // 讀取前 5 名
+            topScores = leaderboard.getTopScores(5);
         }
     }
 
     // --- Getters for rendering & state ---
+
+    public List<ScoreEntry> getTopScores() {
+        return topScores;
+    }
+    
+    public void setPlayerName(String name) {
+        this.playerName = name;
+    }
 
     public Player getPlayer() {
         return player;

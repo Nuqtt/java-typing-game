@@ -17,8 +17,10 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     private final GameEngine engine;
     private final Timer timer;
 
-    public GamePanel() {
-        this.engine = new GameEngine();
+    public GamePanel(String playerName) {
+        LeaderboardStorage storage = new MemoryLeaderboard();
+        storage = new MongoLeaderboard("mongodb://localhost:27017", "TypingGameDB", "scores");
+        this.engine = new GameEngine(playerName, storage);
         this.timer = new Timer(GameConfig.TIMER_DELAY_MS, this);
 
         setPreferredSize(new Dimension(GameConfig.WIDTH, GameConfig.HEIGHT));
@@ -150,35 +152,46 @@ public class GamePanel extends JPanel implements ActionListener, KeyListener {
     }
 
     /** 繪製遊戲結束畫面 */
-    private void drawGameOverOverlay(Graphics g, long elapsedMillis) {
+   private void drawGameOverOverlay(Graphics g, long elapsedMillis) {
         Graphics2D g2 = (Graphics2D) g.create();
 
-        // 半透明黑色背景
-        g2.setColor(new Color(0, 0, 0, 150));
+        // 半透明背景
+        g2.setColor(new Color(0, 0, 0, 200)); // 顏色改深一點比較好看清楚字
         g2.fillRect(0, 0, getWidth(), getHeight());
 
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("SansSerif", Font.BOLD, 32));
         
         String msg = "Game Over";
-        int msgWidth = g2.getFontMetrics().stringWidth(msg);
         int centerX = getWidth() / 2;
-        int centerY = getHeight() / 2;
+        int centerY = getHeight() / 2 - 80; // 往上提一點
+        int msgWidth = g2.getFontMetrics().stringWidth(msg);
+        g2.drawString(msg, centerX - msgWidth / 2, centerY);
 
-        g2.drawString(msg, centerX - msgWidth / 2, centerY - 20);
-
-        g2.setFont(new Font("SansSerif", Font.PLAIN, 20));
-        String score = "Score: " + (elapsedMillis / 1000) + " s";
-        int scoreWidth = g2.getFontMetrics().stringWidth(score);
-        g2.drawString(score, centerX - scoreWidth / 2, centerY + 20);
-
+        // === 顯示排行榜 ===
+        g2.setFont(new Font("Monospaced", Font.PLAIN, 18));
+        g2.setColor(Color.YELLOW);
+        g2.drawString("--- Leaderboard ---", centerX - 100, centerY + 30);
+        
+        g2.setColor(Color.WHITE);
+        java.util.List<ScoreEntry> scores = engine.getTopScores();
+        int yOffset = centerY + 60;
+        
+        if (scores != null) {
+            for (int i = 0; i < scores.size(); i++) {
+                ScoreEntry s = scores.get(i);
+                String line = String.format("%d. %-10s  %d s", i + 1, s.getPlayerName(), s.getScore());
+                g2.drawString(line, centerX - 120, yOffset);
+                yOffset += 25;
+            }
+        }
+        // 重新開始提示
+        g2.setColor(Color.LIGHT_GRAY);
         String hint = "Press SPACE to restart";
-        int hintWidth = g2.getFontMetrics().stringWidth(hint);
-        g2.drawString(hint, centerX - hintWidth / 2, centerY + 60);
+        g2.drawString(hint, centerX - g2.getFontMetrics().stringWidth(hint) / 2, yOffset + 30);
 
         g2.dispose();
     }
-
     // --- KeyListener ---
 
     @Override
