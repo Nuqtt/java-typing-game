@@ -30,6 +30,7 @@ public class GameEngine {
     private final Random random = new Random();
 
     private final StringBuilder typedInput = new StringBuilder();
+    private final ScrollingBackground background; // 背景物件
 
     private boolean running;
     private boolean gameOver;
@@ -44,6 +45,10 @@ public class GameEngine {
     public GameEngine() {
         this.player = new Player(80, GameConfig.GROUND_Y);
         this.wordGenerator = new WordGenerator();
+        // 初始化背景
+        // 假設你有一張 bg.png，沒有的話它會自動用備案的藍天圖
+        // 係數 0.5 代表它移動速度是障礙物的一半 (製造遠景感)
+        this.background = new ScrollingBackground(0.5);
         resetGameState();
     }
 
@@ -61,6 +66,10 @@ public class GameEngine {
         spawnCounter = spawnInterval;
         speed = GameConfig.INITIAL_SPEED;
         lastDifficultyIncreaseAt = System.currentTimeMillis();
+
+        if (background != null) {
+            background.reset();
+        }
     }
 
     public void startGame() {
@@ -77,6 +86,9 @@ public class GameEngine {
         }
 
         player.update();
+
+        // 更新背景 (傳入當前的遊戲速度)
+        background.update(speed);
 
         // 移動障礙物並移除離開畫面的
         for (int i = obstacles.size() - 1; i >= 0; i--) {
@@ -252,6 +264,10 @@ public class GameEngine {
     return System.currentTimeMillis() - lastCorrectInputAt < CORRECT_EFFECT_MS;
     }
 
+    // Panel 畫圖用
+    public ScrollingBackground getBackground() {
+        return background;
+    }
 
     /** 目前畫面中第一個障礙物的單字（UI 顯示用）。 */
     public String getCurrentWord() {
